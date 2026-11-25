@@ -21,7 +21,7 @@ designed this way with chakrit.
 | fx                                       | tx                                                         |
 |------------------------------------------|------------------------------------------------------------|
 | App fragments mounted by a builder       | Method groups, each answered by a `Handlers` record        |
-| Controllers over a chi router            | Routes on Effect's `HttpRouter`, JSON-RPC among them      |
+| Controllers over a chi router            | Routes on Effect's `HttpRouter`, JSON-RPC among them       |
 | `config.StrDef` declarations             | Effect `Config` declarations, resolved from the Worker env |
 | `context.Context` carrying config and DB | Effect services in the `R` channel, provided per request   |
 | Actions: `Validate()` and `Execute()`    | Actions: classes with constructor fields and `run()`       |
