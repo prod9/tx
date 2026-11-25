@@ -59,14 +59,14 @@ Keep one row per spec file. Update this table in the same change when adding, re
 retiring a file. Read it before adding a spec; amend the existing file when its subject
 already has a row.
 
-| File               | Covers                                                        | Status      |
-|--------------------|---------------------------------------------------------------|-------------|
-| `<slug>.md`        | one line on what this file governs                            | implemented |
-| `philosophy.md`    | what tx keeps from fx, what it drops, and why                 | accepted    |
-| `app.md`           | `createApp`, fragments, and the per-request `Ctx`             | implemented |
-| `configuration.md` | `config` declarations and how values resolve from `env`       | implemented |
-| `actions.md`       | `Action`, `executeAction`, request reading and validation     | implemented |
-| `errors.md`        | `HttpError`, the error JSON shape, and how errors render      | implemented |
+| File            | Covers                                                          | Status      |
+|-----------------|-----------------------------------------------------------------|-------------|
+| `<slug>.md`     | one line on what this file governs                              | implemented |
+| `philosophy.md` | what tx keeps from fx, what it changes and drops, and why       | accepted    |
+| `json-rpc.md`   | method groups, the JSON-RPC server and client                   | implemented |
+| `mcp.md`        | the MCP server over a method group                              | implemented |
+| `worker.md`     | the Worker entry, per-request services, config from `env`       | implemented |
+| `patterns.md`   | database, actions and config conventions for apps on tx         | accepted    |
 
 ## Format
 

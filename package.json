@@ -1,31 +1,30 @@
 {
   "name": "@prod9/tx",
   "version": "0.0.0",
-  "description": "PRODIGY9 framework for Cloudflare Workers backed by D1",
+  "description": "PRODIGY9 framework for JSON-RPC Cloudflare Workers on Effect and D1",
   "type": "module",
   "packageManager": "pnpm@12.22.0",
   "exports": {
-    "./action": "./src/action.ts",
-    "./app": "./src/app.ts",
-    "./config": "./src/config.ts",
-    "./context": "./src/context.ts",
-    "./errors": "./src/errors.ts",
-    "./validate": "./src/validate.ts"
+    "./client": "./src/client.ts",
+    "./json-rpc": "./src/json-rpc.ts",
+    "./mcp": "./src/mcp.ts",
+    "./mcp-server": "./src/mcp-server.ts",
+    "./server": "./src/server.ts",
+    "./worker": "./src/worker.ts"
   },
   "scripts": {
     "check": "tsc && biome check .",
     "test": "vitest run"
   },
   "peerDependencies": {
-    "drizzle-orm": "^0.45.0",
-    "hono": "^4.13.0"
+    "effect": "^4.1.5"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.0",
     "@cloudflare/vitest-plugin": "^1.9.0",
     "@cloudflare/workers-types": "^5.0.0",
-    "drizzle-orm": "^0.45.0",
-    "hono": "^4.13.0",
+    "@effect/sql-d1": "^4.1.5",
+    "effect": "^4.1.5",
     "typescript": "^7.0.0",
     "vitest": "^4.1.0"
   }
