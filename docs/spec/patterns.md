@@ -8,7 +8,7 @@ The recommended way to write an app's code on tx. These are conventions over Eff
 ## Database
 
 D1 through `@effect/sql-d1`, by chakrit's ruling on 2026-11-25 ("all your recommendation
-is sound", accepting it over Drizzle and hand-written D1 helpers). Provide it per request
+is sound", accepting it over Drizzle and hand-written D1 helpers). Provide it
 with `HttpRouter.provideRequest(D1Client.layer({ db: env.DB }))`, taking `env` from
 `cloudflare:workers`; the binding is named `DB`.
 

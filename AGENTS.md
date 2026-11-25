@@ -42,11 +42,12 @@ change to argue the exception, not on the principle to defend itself.
    `Request`, `Response`, and the Workers `env` stay reachable. Add ergonomics, not
    opacity.
 3. **Config as decentralized declarations.** Declare an Effect `Config` next to the code
-   that reads it, resolved from the Workers `env` per request. No central config object;
+   that reads it, resolved from the Workers `env`. No central config object;
    no `process.env`.
-4. **Services are the per-request context.** The database, config, and request-scoped
-   values such as the caller's session are Effect services in the `R` channel, provided
-   per request. Do not add a parallel way of passing ambient values.
+4. **Services are the context.** The database, config, and request-scoped values such
+   as the caller's session are Effect services in the `R` channel: isolate-wide ones built
+   once by layers, request-scoped ones provided inside the route. Do not add a parallel
+   way of passing ambient values.
 5. **Everything is optional.** Each module works on its own.
 6. **Operations are first-class.** Every subsystem answers "how do I debug this in
    production?" before it ships.

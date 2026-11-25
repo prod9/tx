@@ -24,15 +24,20 @@ export default worker(routes.pipe(HttpRouter.provideRequest(D1Client.layer({ db:
 - `worker(routes)` builds the handler once, at module scope. Effect requires this on
   Workers: a fiber started inside `fetch` would capture that request's async context.
   Bindings come from `env` in `cloudflare:workers`, not from `fetch`'s arguments.
-- Provide the services route handlers need with `HttpRouter.provideRequest(layer)`, which
-  builds them per request (Philosophy 4). `worker` takes only routes whose services are
-  all provided, so a missing service is a type error, not a runtime "Service not found".
-- `provideRequest` builds its layer on every request to every route it wraps. Apply it to
-  the merged routes that need the service, not to all routes, and keep work that can be
-  shared across requests (fetching signing keys, warming a cache) out of the request
-  layer: make it lazy or cache it in the service.
-- `ConfigProvider.fromUnknown(env)` is provided under the routes, so `Config.String("NAME")`
-  and the other Effect `Config` declarations read the Worker's vars and secrets.
+- Provide the services route handlers need with `HttpRouter.provideRequest(layer)`.
+  `worker` takes only routes whose services are all provided, so a missing service is a
+  type error, not a runtime "Service not found".
+- Every `provideRequest` layer in the app is built once, when `worker(...)` builds the
+  handler, whichever route group it wraps, and the services are shared by every request
+  in the isolate (observed with Effect 4.1.5). A layer that fails, for example on a
+  missing `Config`, fails every request of every route. Keep layers for isolate-wide
+  services (the D1 client, a key verifier); defer work that may fail or that only some
+  routes need into the service itself, so it runs on first use.
+- Values that belong to one request, such as the caller's session, are not layers:
+  resolve them in the route and provide them to the handler with `Effect.provideService`.
+- `ConfigProvider.fromUnknown(env)` is provided under the routes, so
+  `Config.String("NAME")` and the other Effect `Config` declarations read the Worker's
+  vars and secrets.
 - A path no route matches answers 404 (Effect's router).
 
 `HttpRouter` is marked unstable in Effect 4; pin Effect and read its changelog on upgrade.

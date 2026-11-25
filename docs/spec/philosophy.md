@@ -23,7 +23,7 @@ designed this way with chakrit.
 | App fragments mounted by a builder       | Method groups, each answered by a `Handlers` record        |
 | Controllers over a chi router            | Routes on Effect's `HttpRouter`, JSON-RPC among them       |
 | `config.StrDef` declarations             | Effect `Config` declarations, resolved from the Worker env |
-| `context.Context` carrying config and DB | Effect services in the `R` channel, provided per request   |
+| `context.Context` carrying config and DB | Effect services in the `R` channel, from layers and routes |
 | Actions: `Validate()` and `Execute()`    | Actions: classes with constructor fields and `run()`       |
 | `validate` package                       | Effect `Schema`, decoded where input enters                |
 | `render.Error` with a code and message   | JSON-RPC error objects; defects become Internal error      |
