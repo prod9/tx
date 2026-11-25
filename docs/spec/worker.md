@@ -27,6 +27,10 @@ export default worker(routes.pipe(HttpRouter.provideRequest(D1Client.layer({ db:
 - Provide the services route handlers need with `HttpRouter.provideRequest(layer)`, which
   builds them per request (Philosophy 4). `worker` takes only routes whose services are
   all provided, so a missing service is a type error, not a runtime "Service not found".
+- `provideRequest` builds its layer on every request to every route it wraps. Apply it to
+  the merged routes that need the service, not to all routes, and keep work that can be
+  shared across requests (fetching signing keys, warming a cache) out of the request
+  layer: make it lazy or cache it in the service.
 - `ConfigProvider.fromUnknown(env)` is provided under the routes, so `Config.String("NAME")`
   and the other Effect `Config` declarations read the Worker's vars and secrets.
 - A path no route matches answers 404 (Effect's router).
