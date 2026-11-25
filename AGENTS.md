@@ -24,7 +24,7 @@ to be rewritten on tx as a test.
 ## TypeScript exception
 
 TypeScript is allowed in this repository and in apps built on tx, as a granted exception
-to the PRODIGY9 TypeScript ban and to `code · plain-js`. Do not remove TypeScript here.
+to the PRODIGY9 TypeScript ban. Do not remove TypeScript here.
 
 - chakrit, 2026-11-25: "build it in pure typescript. use super fast runtimes/servers/etc."
 - chakrit, 2026-11-25, asked whether the exception covers tx and the apps built on it:
@@ -130,6 +130,9 @@ Handle each request in order:
 4. **Ship and log.** Release and publish, reply to the sender, and add a line to the
    request log: engram project `ga42-prod9-internal-tools`, topic key `tx/requests`
    (amend the entry): date, sender, need, where it landed, commits.
+5. **Update the skill.** When the change alters what an app writes (an export, a pattern,
+   a behavior the `p9-tx` school skill states), send the school agent the skill edits
+   with the tx commit they cover, based on `prod9/school` `main`.
 
 ## Retrospective
 
