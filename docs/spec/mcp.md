@@ -28,7 +28,7 @@ const answerMcp = answerer(
   `InvalidParams`.
 - `initialize` agrees on the client's protocol version when tx supports it (`2025-11-25`,
   `2025-06-18`, `2025-03-26`), otherwise the newest.
-- A body of notifications answers HTTP 202: `replyResponse(reply, 202)`.
+- A body of notifications answers HTTP 202: `answerHttp(request, answerMcp, 202)`.
 
 Authentication is the app's: an endpoint checks the caller (for example a personal access
 token from `bearerToken`) and provides the handlers' services before answering.

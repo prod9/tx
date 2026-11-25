@@ -1,15 +1,20 @@
-import { env } from "cloudflare:test";
+import { env } from "cloudflare:workers";
 import * as D1Client from "@effect/sql-d1/D1Client";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import * as HttpRouter from "effect/http/HttpRouter";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Layer from "effect/Layer";
+import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import { describe, expect, it } from "vitest";
 import { methodGroup } from "../src/json-rpc.ts";
 import { answerer, type Handlers } from "../src/server.ts";
-import { bearerToken, replyResponse, unauthorized, worker } from "../src/worker.ts";
+import { answerHttp, bearerToken, unauthorized, worker } from "../src/worker.ts";
 
-// The Worker entry, config from env, and D1 through @effect/sql-d1: docs/spec/worker.md
+// The Worker entry over Effect's HttpRouter, config from env, and D1 through
+// @effect/sql-d1: docs/spec/worker.md
 
 const Todo = Schema.Struct({ id: Schema.Number, title: Schema.String });
 
@@ -30,29 +35,38 @@ const appHandlers = {
 
 const answer = answerer(AppMethods, appHandlers);
 
-const app = worker<Cloudflare.Env, SqlClient.SqlClient, unknown>({
-  endpoints: {
-    "/rpc": (request) =>
-      Effect.gen(function* () {
-        const body = yield* Effect.promise(() => request.text());
-        return replyResponse(yield* answer(body), 204);
-      }),
-    "/private": (request) =>
-      Effect.succeed(bearerToken(request)._tag === "Some" ? new Response("ok") : unauthorized()),
-  },
-  layer: (bindings) => D1Client.layer({ db: bindings.DB }),
-});
+const routes = Layer.mergeAll(
+  HttpRouter.add("POST", "/rpc", (request) => answerHttp(request, answer, 204)),
+  HttpRouter.add(
+    "GET",
+    "/go/:slug",
+    HttpRouter.params.pipe(
+      Effect.map((params) =>
+        HttpServerResponse.redirect(`https://example.com/${params.slug ?? ""}`, { status: 302 }),
+      ),
+    ),
+  ),
+  HttpRouter.add("GET", "/private", (request) =>
+    Effect.succeed(
+      Option.isSome(bearerToken(request)) ? HttpServerResponse.text("ok") : unauthorized(),
+    ),
+  ),
+);
 
-function post(path: string, body: string, headers: Record<string, string> = {}): Promise<Response> {
-  return app.fetch(new Request(`https://app${path}`, { method: "POST", body, headers }), env);
+const app = worker(routes.pipe(HttpRouter.provideRequest(D1Client.layer({ db: env.DB }))));
+
+function fetchApp(path: string, init: RequestInit = {}): Promise<Response> {
+  return app.fetch(new Request(`https://app${path}`, init));
 }
 
 function rpc(method: string, params: unknown): Promise<Response> {
-  return post("/rpc", JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }));
+  const body = JSON.stringify({ jsonrpc: "2.0", id: 1, method, params });
+  return fetchApp("/rpc", { method: "POST", body });
 }
 
 function notify(method: string, params: unknown): Promise<Response> {
-  return post("/rpc", JSON.stringify({ jsonrpc: "2.0", method, params }));
+  const body = JSON.stringify({ jsonrpc: "2.0", method, params });
+  return fetchApp("/rpc", { method: "POST", body });
 }
 
 describe("worker", () => {
@@ -80,18 +94,20 @@ describe("worker", () => {
     expect(await res.text()).toBe("");
   });
 
-  it("answers an unknown path with 404 and a non-POST with 405", async () => {
-    const missing = await post("/nowhere", "{}");
-    const get = await app.fetch(new Request("https://app/rpc"), env);
+  it("serves plain HTTP routes beside JSON-RPC", async () => {
+    const res = await fetchApp("/go/abc", { redirect: "manual" });
 
-    expect(missing.status).toBe(404);
-    expect(get.status).toBe(405);
-    expect(get.headers.get("allow")).toBe("POST");
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe("https://example.com/abc");
+  });
+
+  it("answers a path no route matches with 404", async () => {
+    expect((await fetchApp("/nowhere")).status).toBe(404);
   });
 
   it("reads a bearer token, answering 401 without one", async () => {
-    const anonymous = await post("/private", "");
-    const signedIn = await post("/private", "", { authorization: "Bearer abc" });
+    const anonymous = await fetchApp("/private");
+    const signedIn = await fetchApp("/private", { headers: { authorization: "Bearer abc" } });
 
     expect(anonymous.status).toBe(401);
     expect(anonymous.headers.get("www-authenticate")).toBe("Bearer");

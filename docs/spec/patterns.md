@@ -8,8 +8,9 @@ The recommended way to write an app's code on tx. These are conventions over Eff
 ## Database
 
 D1 through `@effect/sql-d1`, by chakrit's ruling on 2026-11-25 ("all your recommendation
-is sound", accepting it over Drizzle and hand-written D1 helpers). Provide it with
-`D1Client.layer({ db: env.DB })`; the binding is named `DB`.
+is sound", accepting it over Drizzle and hand-written D1 helpers). Provide it per request
+with `HttpRouter.provideRequest(D1Client.layer({ db: env.DB }))`, taking `env` from
+`cloudflare:workers`; the binding is named `DB`.
 
 - Write SQL with the `SqlClient` tagged template: values interpolate as bound parameters.
 - Decode rows through their `Schema` where they are read. A row that fails its schema is

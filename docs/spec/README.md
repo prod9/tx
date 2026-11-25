@@ -65,7 +65,7 @@ already has a row.
 | `philosophy.md` | what tx keeps from fx, what it changes and drops, and why       | accepted    |
 | `json-rpc.md`   | method groups, the JSON-RPC server and client                   | implemented |
 | `mcp.md`        | the MCP server over a method group                              | implemented |
-| `worker.md`     | the Worker entry, per-request services, config from `env`       | implemented |
+| `worker.md`     | the Worker entry on HttpRouter, per-request services, config    | implemented |
 | `patterns.md`   | database, actions and config conventions for apps on tx         | accepted    |
 
 ## Format
