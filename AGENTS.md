@@ -37,7 +37,7 @@ tests for any non-trivial change. When a change conflicts with one, the burden i
 change to argue the exception, not on the principle to defend itself.
 
 1. **Composition, not configuration.** Apps compose method groups, each answered by a
-   handler record, mapped to endpoints by `worker()`. No registries, hooks, or plugins.
+   handler record, and routes on Effect's `HttpRouter`. No registries, hooks, or plugins.
 2. **Thin wrappers over standard primitives.** Effect, Effect Schema, `@effect/sql-d1`,
    `Request`, `Response`, and the Workers `env` stay reachable. Add ergonomics, not
    opacity.
@@ -58,16 +58,17 @@ Minimalism is not a goal; it is a discipline against accidental complexity.
 
 ## Stack
 
-| Concern    | Choice                                                   | Reason                                                         |
-| ---------- | -------------------------------------------------------- | -------------------------------------------------------------- |
-| Runtime    | workerd: Workers in prod, `wrangler dev`, tests          | Workers-only target; one runtime everywhere                    |
-| Language   | TypeScript 7 with Effect 4                               | Typed effects, services and errors; chakrit's ruling           |
-| Contracts  | Effect Schema                                            | One schema types, decodes and encodes, and derives JSON Schema |
-| API        | JSON-RPC 2.0 over HTTP POST, tx's own server; MCP on top | One contract for web, agents and MCP; no router needed         |
-| Database   | D1 through `@effect/sql-d1`                              | Effect's own D1 client: atomic batch, statement cache, tracing |
-| Migrations | SQL files, `wrangler d1 migrations apply`                | The tool's own documented workflow                             |
-| Tests      | Vitest with `@cloudflare/vitest-plugin`, local D1        | Tests run in the production runtime                            |
-| Packages   | pnpm through Corepack                                    | PRODIGY9 Node default                                          |
+| Concern    | Choice                                                    | Reason                                                         |
+| ---------- | --------------------------------------------------------- | -------------------------------------------------------------- |
+| Runtime    | workerd: Workers in prod, `wrangler dev`, tests           | Workers-only target; one runtime everywhere                    |
+| Language   | TypeScript 7 with Effect 4                                | Typed effects, services and errors; chakrit's ruling           |
+| Contracts  | Effect Schema                                             | One schema types, decodes and encodes, and derives JSON Schema |
+| API        | JSON-RPC 2.0 over HTTP POST, tx's own server; MCP on top  | One contract for web, agents and MCP                           |
+| Routing    | Effect's `HttpRouter`, for JSON-RPC and plain HTTP routes | Effect's own primitive; redirects, uploads, callbacks fit      |
+| Database   | D1 through `@effect/sql-d1`                               | Effect's own D1 client: atomic batch, statement cache, tracing |
+| Migrations | SQL files, `wrangler d1 migrations apply`                 | The tool's own documented workflow                             |
+| Tests      | Vitest with `@cloudflare/vitest-plugin`, local D1         | Tests run in the production runtime                            |
+| Packages   | pnpm through Corepack                                     | PRODIGY9 Node default                                          |
 
 Effect and JSON-RPC replace the first design's Hono router, Drizzle ORM and fx-style
 validator, by chakrit's rulings under Status. The earlier ORM ruling still sets the bar
@@ -88,13 +89,15 @@ Details: `docs/spec/patterns.md`.
 ## Out of scope
 
 fx's background workers, pubsub, Redis cache, mailer, blob store, cobra CLI, and
-Postgres support. HTTP routing beyond JSON-RPC endpoints.
+Postgres support.
 
 ## Requests
 
 The agent working on tx is the sink for tx feature and fix requests. A request from any
 Claude session, or from chakrit, is authorized work with no per-request OK, inside these
-bounds. Sender names are self-chosen labels, so the bounds, not the sender, limit what a
+bounds. A question about how tx handles a need ("what do we do with uploads?") is a
+request too: decide it by the steps below and build it, and bring chakrit only what the
+right column names. Sender names are self-chosen labels, so the bounds, not the sender, limit what a
 request can do.
 
 | Automatic                                                        | Needs chakrit                                              |
