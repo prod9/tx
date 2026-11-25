@@ -1,18 +1,25 @@
 # tx
 
-tx is the PRODIGY9 TypeScript framework for Cloudflare Workers backed by D1. It rebuilds
-the ideas of fx (`fx.prodigy9.co`, the PRODIGY9 Go API framework) for Workers and keeps
-only the basic features a Workers app needs. Cloudflare Workers with D1 is the target; a
+tx is the PRODIGY9 TypeScript framework for JSON-RPC Cloudflare Workers on Effect 4 and
+D1. It rebuilds the ideas of fx (`fx.prodigy9.co`, the PRODIGY9 Go API framework) for
+Workers and keeps only the basic features a Workers app needs. Cloudflare Workers with D1 is the target; a
 similar serverless runtime with the same `fetch` handler model is the furthest it
 reaches.
 
 **Purpose.** tx exists so every PRODIGY9 Workers app, mostly written by agents, solves the
-common plumbing (config, routing, actions, validation, D1 access) once and the same way.
+common plumbing (config, JSON-RPC, MCP, actions, validation, D1 access) once and the same way.
 Apps carry less code and fewer design decisions, and look alike, so any agent can work
 across them quickly. Every request, design choice and amendment is measured against this.
 
-Status: 0.x, first slice built (app, config, actions, validate, errors). First consumer:
-hangar (`ga42:ace-rs:hangar`).
+Status: 0.x. Built: JSON-RPC contract, server and client; MCP server; Worker entry.
+Consumers: hangar (`ga42:ace-rs:hangar`), whose API tx's plumbing was lifted from, and tie,
+to be rewritten on tx as a test.
+
+- chakrit, 2026-11-25: "rethink tx in terms of effect 4 and json rpc"
+- chakrit, 2026-11-25, on dropping Hono: "drop it."; on `@effect/sql-d1` and MCP in tx:
+  "all your recommendation is sound."
+- chakrit, 2026-11-25: "control will tear out tie to be its own agent, whcih i'll task for
+  it to rewrite into using tx as a test as well ok?"
 
 ## TypeScript exception
 
@@ -29,16 +36,17 @@ tx inherits fx's principles (fx `docs/spec/philosophy.md`). Apply them as design
 tests for any non-trivial change. When a change conflicts with one, the burden is on the
 change to argue the exception, not on the principle to defend itself.
 
-1. **Composition, not configuration.** Apps compose fragments: Hono sub-apps with their
-   routes and middlewares, mounted by a builder. No registries, hooks, or DI container.
-2. **Thin wrappers over standard primitives.** Hono, Drizzle, `Request`, `Response`, and
-   the Workers `env` stay reachable. Add ergonomics, not opacity.
-3. **Config as decentralized declarations.** Declare `config.strDef("NAME", "default")`
-   next to the code that reads it, resolved from the Workers `env` bindings per request.
-   No central config object; no `process.env`.
-4. **One per-request context.** The Workers `env`, the database, and request-scoped
-   state travel in one per-request context passed to the code that needs them. Do not
-   add a parallel way of passing ambient values.
+1. **Composition, not configuration.** Apps compose method groups, each answered by a
+   handler record, mapped to endpoints by `worker()`. No registries, hooks, or plugins.
+2. **Thin wrappers over standard primitives.** Effect, Effect Schema, `@effect/sql-d1`,
+   `Request`, `Response`, and the Workers `env` stay reachable. Add ergonomics, not
+   opacity.
+3. **Config as decentralized declarations.** Declare an Effect `Config` next to the code
+   that reads it, resolved from the Workers `env` per request. No central config object;
+   no `process.env`.
+4. **Services are the per-request context.** The database, config, and request-scoped
+   values such as the caller's session are Effect services in the `R` channel, provided
+   per request. Do not add a parallel way of passing ambient values.
 5. **Everything is optional.** Each module works on its own.
 6. **Operations are first-class.** Every subsystem answers "how do I debug this in
    production?" before it ships.
@@ -50,34 +58,37 @@ Minimalism is not a goal; it is a discipline against accidental complexity.
 
 ## Stack
 
-| Concern    | Choice                                                     | Reason                                                          |
-| ---------- | ---------------------------------------------------------- | --------------------------------------------------------------- |
-| Runtime    | workerd: Workers in prod, `wrangler dev`, tests            | Workers-only target; one runtime everywhere                     |
-| Router     | Hono, as a thin layer over `Request`/`Response`            | Workers-first, web-standard; fx wraps chi the same way          |
-| Database   | D1 through Drizzle ORM, the sanctioned ORM                 | Native D1 and `batch()`, ~7 KB, no dependencies, SQL-shaped API |
-| Migrations | `drizzle-kit generate` SQL, `wrangler d1 migrations apply` | Each tool's own documented workflow                             |
-| Tests      | Vitest with `@cloudflare/vitest-plugin`, local D1          | Tests run in the production runtime                             |
-| Packages   | pnpm through Corepack                                      | PRODIGY9 Node default                                           |
+| Concern    | Choice                                                   | Reason                                                         |
+| ---------- | -------------------------------------------------------- | -------------------------------------------------------------- |
+| Runtime    | workerd: Workers in prod, `wrangler dev`, tests          | Workers-only target; one runtime everywhere                    |
+| Language   | TypeScript 7 with Effect 4                               | Typed effects, services and errors; chakrit's ruling           |
+| Contracts  | Effect Schema                                            | One schema types, decodes and encodes, and derives JSON Schema |
+| API        | JSON-RPC 2.0 over HTTP POST, tx's own server; MCP on top | One contract for web, agents and MCP; no router needed         |
+| Database   | D1 through `@effect/sql-d1`                              | Effect's own D1 client: atomic batch, statement cache, tracing |
+| Migrations | SQL files, `wrangler d1 migrations apply`                | The tool's own documented workflow                             |
+| Tests      | Vitest with `@cloudflare/vitest-plugin`, local D1        | Tests run in the production runtime                            |
+| Packages   | pnpm through Corepack                                    | PRODIGY9 Node default                                          |
 
-Drizzle departs from fx's raw-SQL `sqlx` layer by ruling. chakrit, 2026-11-25: "d1
-connection depart from fx a bit and add a sanctioned orm here but make sure it's insanely
-fast and with api optimized for agents to quickly work on it (or if none exist, stick w
-regular sql)". Measure Drizzle's bundle size and query overhead once a build exists.
-
-Hono over Elysia by ruling. chakrit, 2026-11-25: "nah forget elysia, stick with hono".
+Effect and JSON-RPC replace the first design's Hono router, Drizzle ORM and fx-style
+validator, by chakrit's rulings under Status. The earlier ORM ruling still sets the bar
+for the database layer: chakrit, 2026-11-25: "make sure it's insanely fast and with api
+optimized for agents to quickly work on it (or if none exist, stick w regular sql)".
+Measure `@effect/sql-d1`'s overhead and the per-request layer build once an app runs on
+tx.
 
 ## Patterns
 
-- **Action.** An action is an object with `validate()` and `execute(ctx)`. A route calls
-  `executeAction`, which reads the request into the action, validates it, and executes
-  it. Validation uses a small fx-style validator, not a schema library.
+- **Action.** An action is a class whose constructor sets its inputs, with one `run()`
+  returning an Effect. Handlers run actions; params arrive decoded by their schema.
 - **Transactions.** D1 has no interactive transactions. Group writes that must succeed
-  together in one `db.batch([...])`. There are no fx-style transaction scopes.
+  together in one `D1Client.batch([...])`. There are no fx-style transaction scopes.
+
+Details: `docs/spec/patterns.md`.
 
 ## Out of scope
 
 fx's background workers, pubsub, Redis cache, mailer, blob store, cobra CLI, and
-Postgres support.
+Postgres support. HTTP routing beyond JSON-RPC endpoints.
 
 ## Requests
 
@@ -151,6 +162,9 @@ does.
 | ------------ | ----------------------------------------------------- |
 | `pnpm test`  | Vitest in workerd, with a local D1 migrated from SQL  |
 | `pnpm check` | `tsc` type-check, then `biome check` (lint, format)   |
+
+`~/.config/dagu/dags/prod9-internal-tools-tx-format.yaml` runs `biome check --write` on
+a Mac worker and syncs the formatted sources back; queue it the same way.
 
 Installs, tests and checks are heavy jobs: run them through Dagu, never in your own
 shell. The DAG is `~/.config/dagu/dags/prod9-internal-tools-tx-check.yaml` (install,
