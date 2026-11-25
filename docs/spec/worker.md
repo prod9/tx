@@ -12,7 +12,7 @@ import { env } from "cloudflare:workers";
 const answer = answerer(AppMethods, appHandlers);
 
 const routes = Layer.mergeAll(
-  HttpRouter.add("POST", "/rpc", (request) => answerHttp(request, answer, 204)),
+  rpcRoute("/rpc", (request) => answerHttp(request, answer, 204)),
   HttpRouter.add("GET", "/:slug", redirectToTarget),
 );
 
@@ -39,6 +39,9 @@ export default worker(routes.pipe(HttpRouter.provideRequest(D1Client.layer({ db:
   `Config.String("NAME")` and the other Effect `Config` declarations read the Worker's
   vars and secrets.
 - A path no route matches answers 404 (Effect's router).
+- Declare each JSON-RPC endpoint with `rpcRoute(path, post)`: `post` answers POST, and
+  every other method answers 405 with `Allow: POST`. It is one wildcard route, so do
+  not add other routes on the same path.
 
 `HttpRouter` is marked unstable in Effect 4; pin Effect and read its changelog on upgrade.
 
@@ -46,6 +49,7 @@ export default worker(routes.pipe(HttpRouter.provideRequest(D1Client.layer({ db:
 
 | Function                                 | Does                                                                 |
 |------------------------------------------|----------------------------------------------------------------------|
+| `rpcRoute(path, post)`                   | a JSON-RPC endpoint: `post` for POST, 405 `Allow: POST` otherwise    |
 | `answerHttp(request, answer, status)`    | answers a JSON-RPC body; `status` (204, or 202 for MCP) if no reply  |
 | `bearerToken(request)`                   | the `Authorization: Bearer` token, as an `Option`                    |
 | `unauthorized()`                         | 401 with `www-authenticate: Bearer`                                  |

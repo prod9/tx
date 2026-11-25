@@ -1,5 +1,5 @@
 // The Worker entry: docs/spec/worker.md. An app's routes are an Effect HttpRouter layer;
-// JSON-RPC endpoints are routes answered by `answerHttp`. Effect `Config` reads the
+// JSON-RPC endpoints are `rpcRoute`s answered by `answerHttp`. Effect `Config` reads the
 // Worker's env.
 
 import { env } from "cloudflare:workers";
@@ -33,6 +33,21 @@ export const worker = <E, RouteError>(app: Routes<E, RouteError>) => {
 
   return { fetch: (request: Request): Promise<Response> => web.handler(request) };
 };
+
+// A JSON-RPC endpoint: `post` answers POST, and every other method answers 405 with
+// `Allow: POST`, which MCP Streamable HTTP requires of a server with no SSE stream. One
+// wildcard route, because a POST route beside a wildcard one on the same path collides.
+export const rpcRoute = <E, R>(
+  path: HttpRouter.PathInput,
+  post: (
+    request: HttpServerRequest.HttpServerRequest,
+  ) => Effect.Effect<HttpServerResponse.HttpServerResponse, E, R>,
+) =>
+  HttpRouter.add("*", path, (request) =>
+    request.method === "POST" ? post(request) : Effect.succeed(methodNotAllowed),
+  );
+
+const methodNotAllowed = HttpServerResponse.empty({ status: 405, headers: { allow: "POST" } });
 
 // Answers a JSON-RPC request body: the reply as JSON, or `noReplyStatus` when every
 // message was a notification (204 for plain JSON-RPC, 202 for MCP Streamable HTTP).

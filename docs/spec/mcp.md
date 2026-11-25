@@ -29,6 +29,8 @@ const answerMcp = answerer(
 - `initialize` agrees on the client's protocol version when tx supports it (`2025-11-25`,
   `2025-06-18`, `2025-03-26`), otherwise the newest.
 - A body of notifications answers HTTP 202: `answerHttp(request, answerMcp, 202)`.
+- tx offers no SSE stream, so the endpoint is an `rpcRoute`: GET and every other method
+  but POST answer 405 with `Allow: POST`, as Streamable HTTP requires.
 
 Authentication is the app's: an endpoint checks the caller (for example a personal access
 token from `bearerToken`) and provides the handlers' services before answering.

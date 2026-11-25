@@ -11,7 +11,7 @@ import * as SqlClient from "effect/sql/SqlClient";
 import { describe, expect, it } from "vitest";
 import { methodGroup } from "../src/json-rpc.ts";
 import { answerer, type Handlers } from "../src/server.ts";
-import { answerHttp, bearerToken, unauthorized, worker } from "../src/worker.ts";
+import { answerHttp, bearerToken, rpcRoute, unauthorized, worker } from "../src/worker.ts";
 
 // The Worker entry over Effect's HttpRouter, config from env, and D1 through
 // @effect/sql-d1: docs/spec/worker.md
@@ -36,7 +36,7 @@ const appHandlers = {
 const answer = answerer(AppMethods, appHandlers);
 
 const routes = Layer.mergeAll(
-  HttpRouter.add("POST", "/rpc", (request) => answerHttp(request, answer, 204)),
+  rpcRoute("/rpc", (request) => answerHttp(request, answer, 204)),
   HttpRouter.add(
     "GET",
     "/go/:slug",
@@ -92,6 +92,21 @@ describe("worker", () => {
 
     expect(res.status).toBe(204);
     expect(await res.text()).toBe("");
+  });
+
+  it("answers any method but POST on a JSON-RPC route with 405 and Allow: POST", async () => {
+    const statuses = await Promise.all(
+      ["GET", "DELETE", "OPTIONS"].map(async (method) => {
+        const res = await fetchApp("/rpc", { method });
+        return [res.status, res.headers.get("allow")];
+      }),
+    );
+
+    expect(statuses).toEqual([
+      [405, "POST"],
+      [405, "POST"],
+      [405, "POST"],
+    ]);
   });
 
   it("serves plain HTTP routes beside JSON-RPC", async () => {
