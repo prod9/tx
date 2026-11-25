@@ -11,7 +11,8 @@ common plumbing (config, routing, actions, validation, D1 access) once and the s
 Apps carry less code and fewer design decisions, and look alike, so any agent can work
 across them quickly. Every request, design choice and amendment is measured against this.
 
-Status: design settled, no code yet.
+Status: 0.x, first slice built (app, config, actions, validate, errors). First consumer:
+hangar (`ga42:ace-rs:hangar`).
 
 ## TypeScript exception
 
@@ -55,7 +56,7 @@ Minimalism is not a goal; it is a discipline against accidental complexity.
 | Router     | Hono, as a thin layer over `Request`/`Response`            | Workers-first, web-standard; fx wraps chi the same way          |
 | Database   | D1 through Drizzle ORM, the sanctioned ORM                 | Native D1 and `batch()`, ~7 KB, no dependencies, SQL-shaped API |
 | Migrations | `drizzle-kit generate` SQL, `wrangler d1 migrations apply` | Each tool's own documented workflow                             |
-| Tests      | Vitest with `@cloudflare/vitest-pool-workers`, local D1    | Tests run in the production runtime                             |
+| Tests      | Vitest with `@cloudflare/vitest-plugin`, local D1          | Tests run in the production runtime                             |
 | Packages   | pnpm through Corepack                                      | PRODIGY9 Node default                                           |
 
 Drizzle departs from fx's raw-SQL `sqlx` layer by ruling. chakrit, 2026-11-25: "d1
@@ -146,13 +147,45 @@ does.
 
 ## Commands
 
-None yet; add them with the project setup. Installs and full test suites are heavy jobs:
-run them through Dagu as the project control policy directs.
+| Command      | Runs                                                  |
+| ------------ | ----------------------------------------------------- |
+| `pnpm test`  | Vitest in workerd, with a local D1 migrated from SQL  |
+| `pnpm check` | `tsc` type-check, then `biome check` (lint, format)   |
 
-## Durable docs
+Installs, tests and checks are heavy jobs: run them through Dagu, never in your own
+shell. The DAG is `~/.config/dagu/dags/prod9-internal-tools-tx-check.yaml` (install,
+push the lockfile back, test, check, on a Mac worker); queue it with
+`dagu enqueue --run-id <id> prod9-internal-tools-tx-check` and read
+`dagu status --run-id <id> prod9-internal-tools-tx-check`.
 
-None yet. Scaffold `docs/` with the `ace-docs` skill when building starts; the first spec
-is `docs/spec/philosophy.md`, stating what tx keeps from fx, what it drops, and why.
+Dependencies are caret ranges in `package.json` and pinned by `pnpm-lock.yaml`; pnpm's
+`minimumReleaseAge` picks versions old enough. Only `esbuild` and `workerd` may run
+install scripts (`pnpm-workspace.yaml`, `allowBuilds`).
+
+## Durable artifacts
+
+`docs/` holds this project's durable record.
+
+**`docs/spec/` is authoritative — read the relevant spec before working, and comply.**
+It owes no justification: a rule that departs from mainstream practice, from what you
+would have picked, or from what you expected is not grounds to escalate, annotate, or
+re-open it. If a spec is wrong, raise it with the user and amend the spec.
+
+**Everything settled is a `docs/spec/` amendment**, written as the user gave it — an
+instruction you were given, an approach that was agreed, a library that was picked, a
+convention or preference that was fixed. Record it with the steps in
+`docs/spec/README.md`, "Recording a settled rule".
+
+File new material by the gate, first match wins: our own design or surface → `spec/`.
+
+**Before writing under `docs/`, read `docs/README.md`, then the destination folder's
+`README.md`.** The root file defines the routing gate. The folder file defines its
+filing test, filename format, and lifecycle rules. Both are binding.
+
+**`docs/spec/README.md` indexes every spec file — keep it current.** Read the index
+before adding a spec file, so you amend the existing doc on a subject instead of
+writing a second one. Adding, renaming, or retiring a file updates its row in the same
+change.
 
 ## Git commit convention
 
