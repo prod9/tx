@@ -4,7 +4,7 @@
 import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import * as JsonRpc from "./json-rpc.ts";
+import * as JsonRpc from "./json-rpc";
 
 export interface Endpoint {
   readonly fetcher: { fetch(url: string, init: RequestInit): Promise<Response> };

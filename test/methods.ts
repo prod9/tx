@@ -1,8 +1,8 @@
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
-import { methodGroup } from "../src/json-rpc.ts";
-import type { Handlers } from "../src/server.ts";
+import { methodGroup } from "../src/json-rpc";
+import type { Handlers } from "../src/server";
 
 // A small method group shared by the tests.
 

@@ -1,11 +1,11 @@
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
-import { ErrorCode } from "../src/json-rpc.ts";
-import { McpMethods } from "../src/mcp.ts";
-import { mcpHandlers } from "../src/mcp-server.ts";
-import { answerer } from "../src/server.ts";
-import { MathMethods, mathHandlers } from "./methods.ts";
+import { ErrorCode } from "../src/json-rpc";
+import { McpMethods } from "../src/mcp";
+import { mcpHandlers } from "../src/mcp-server";
+import { answerer } from "../src/server";
+import { MathMethods, mathHandlers } from "./methods";
 
 // MCP over the JSON-RPC server: docs/spec/mcp.md
 

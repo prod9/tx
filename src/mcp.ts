@@ -2,7 +2,7 @@
 // (docs/spec/mcp.md, https://modelcontextprotocol.io/specification). Browser-safe.
 
 import * as Schema from "effect/Schema";
-import { methodGroup } from "./json-rpc.ts";
+import { methodGroup } from "./json-rpc";
 
 export const Implementation = Schema.Struct({ name: Schema.String, version: Schema.String });
 export type Implementation = typeof Implementation.Type;

@@ -179,6 +179,11 @@ push the lockfile back, test, check, on a Mac worker); queue it with
 `dagu enqueue --run-id <id> prod9-internal-tools-tx-check` and read
 `dagu status --run-id <id> prod9-internal-tools-tx-check`.
 
+tx ships `src/*.ts`, so every consumer type-checks tx under its own compiler options.
+`tsconfig.json` carries the strictest flags a consumer uses, relative imports are
+extensionless, and Biome's `useLiteralKeys` is off because
+`noPropertyAccessFromIndexSignature` requires bracket access.
+
 Dependencies are caret ranges in `package.json` and pinned by `pnpm-lock.yaml`; pnpm's
 `minimumReleaseAge` picks versions old enough. Only `esbuild` and `workerd` may run
 install scripts (`pnpm-workspace.yaml`, `allowBuilds`).

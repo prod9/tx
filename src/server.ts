@@ -6,7 +6,7 @@ import * as Arr from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import * as JsonRpc from "./json-rpc.ts";
+import * as JsonRpc from "./json-rpc";
 
 // A handler fails with the JSON-RPC error its caller receives; it needs services `R`, such
 // as the caller's identity, that the endpoint provides.

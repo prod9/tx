@@ -9,9 +9,9 @@ import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import { describe, expect, it } from "vitest";
-import { methodGroup } from "../src/json-rpc.ts";
-import { answerer, type Handlers } from "../src/server.ts";
-import { answerHttp, bearerToken, rpcRoute, unauthorized, worker } from "../src/worker.ts";
+import { methodGroup } from "../src/json-rpc";
+import { answerer, type Handlers } from "../src/server";
+import { answerHttp, bearerToken, rpcRoute, unauthorized, worker } from "../src/worker";
 
 // The Worker entry over Effect's HttpRouter, config from env, and D1 through
 // @effect/sql-d1: docs/spec/worker.md
@@ -42,7 +42,7 @@ const routes = Layer.mergeAll(
     "/go/:slug",
     HttpRouter.params.pipe(
       Effect.map((params) =>
-        HttpServerResponse.redirect(`https://example.com/${params.slug ?? ""}`, { status: 302 }),
+        HttpServerResponse.redirect(`https://example.com/${params["slug"] ?? ""}`, { status: 302 }),
       ),
     ),
   ),

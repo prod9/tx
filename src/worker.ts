@@ -69,7 +69,7 @@ export const answerHttp = <R>(
 export const bearerToken = (
   request: HttpServerRequest.HttpServerRequest,
 ): Option.Option<string> => {
-  const match = /^Bearer (\S+)$/.exec(request.headers.authorization ?? "");
+  const match = /^Bearer (\S+)$/.exec(request.headers["authorization"] ?? "");
   return Option.fromNullishOr(match?.[1]);
 };
 

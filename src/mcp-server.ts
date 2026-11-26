@@ -5,9 +5,9 @@
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import * as Schema from "effect/Schema";
-import * as JsonRpc from "./json-rpc.ts";
-import type { Implementation, McpMethods, Tool } from "./mcp.ts";
-import { answerer, type HandlerServices, type Handlers } from "./server.ts";
+import * as JsonRpc from "./json-rpc";
+import type { Implementation, McpMethods, Tool } from "./mcp";
+import { answerer, type HandlerServices, type Handlers } from "./server";
 
 // Newest first; a client asking for one of these gets it, any other gets the newest.
 const protocolVersions = ["2025-11-25", "2025-06-18", "2025-03-26"] as const;

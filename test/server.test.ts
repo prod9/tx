@@ -1,9 +1,9 @@
 import * as Effect from "effect/Effect";
 import * as Option from "effect/Option";
 import { describe, expect, it } from "vitest";
-import { ErrorCode } from "../src/json-rpc.ts";
-import { answerer } from "../src/server.ts";
-import { DivisionByZero, Greeting, TestMethods, testHandlers } from "./methods.ts";
+import { ErrorCode } from "../src/json-rpc";
+import { answerer } from "../src/server";
+import { DivisionByZero, Greeting, TestMethods, testHandlers } from "./methods";
 
 // JSON-RPC 2.0 behaviour: docs/spec/json-rpc.md, https://www.jsonrpc.org/specification
 
